@@ -28,17 +28,20 @@ function layout($title,$body):void {
  echo '<main><div class="page-heading"><div class="eyebrow">BGB / 360 EVALUATION</div><h1>'.h($title).'</h1></div>';
  if(isset($_SESSION['flash'])){[$msg,$kind]=$_SESSION['flash'];unset($_SESSION['flash']);echo '<div class="alert '.h($kind).'">'.h($msg).'</div>';}echo $body.'</main></div><script src="'.url('assets/js/app.js?v=2').'" defer></script></body></html>';
 }
+function is_self_module($slug):bool{return in_array((string)$slug,['personal-evaluation','self-evaluation'],true);}
 /** Automatically provision personal evaluations for the logged-in active teacher.
  * No administrator assignment is required. One per open cycle; existing drafts/submissions survive.
  */
 function ensure_teacher_self_evaluations(int $teacherId):void {
     $teacher=one("SELECT id FROM users WHERE id=? AND role='teacher' AND is_active=1",[$teacherId]);
     if(!$teacher)return;
-    $module=one("SELECT id FROM modules WHERE slug='personal-evaluation' AND evaluator_role='teacher' AND is_active=1");
-    if(!$module)return;
+    $modules=all("SELECT id FROM modules WHERE slug IN ('personal-evaluation','self-evaluation') AND evaluator_role='teacher' AND is_active=1");
+    if(!$modules)return;
     $cycles=all('SELECT id FROM evaluation_cycles WHERE is_open=1');
-    foreach($cycles as $cycle){
-        sql('INSERT IGNORE INTO assignments(module_id,cycle_id,evaluator_id,subject_id) VALUES (?,?,?,?)',[(int)$module['id'],(int)$cycle['id'],$teacherId,$teacherId]);
+    foreach($modules as $module){
+        foreach($cycles as $cycle){
+            sql('INSERT IGNORE INTO assignments(module_id,cycle_id,evaluator_id,subject_id) VALUES (?,?,?,?)',[(int)$module['id'],(int)$cycle['id'],$teacherId,$teacherId]);
+        }
     }
 }
 function dashboard_path($role):string{return match($role){'admin'=>'admin/dashboard.php','management'=>'management/reports.php','supervisor'=>'supervisor/dashboard.php',default=>'teacher/dashboard.php'};}

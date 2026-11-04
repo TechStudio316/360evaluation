@@ -2,7 +2,7 @@
 require __DIR__.'/../includes/core.php';
 require_login(['admin']);
 $error='';$preview=[];$previewWarnings=[];
-$modules=all("SELECT * FROM modules WHERE is_active=1 AND evaluator_role!='public' AND slug!='personal-evaluation' ORDER BY name");
+$modules=all("SELECT * FROM modules WHERE is_active=1 AND evaluator_role!='public' AND slug NOT IN ('personal-evaluation','self-evaluation') ORDER BY name");
 $peer=one("SELECT * FROM modules WHERE slug='peer-observation' AND evaluator_role='teacher' AND is_active=1");
 $users=all('SELECT u.*,s.name section_name FROM users u LEFT JOIN school_sections s ON s.id=u.section_id WHERE u.is_active=1 ORDER BY s.name,u.name,u.id');
 $cycles=all('SELECT c.*,s.name session_name FROM evaluation_cycles c JOIN academic_sessions s ON s.id=c.session_id WHERE c.is_open=1 ORDER BY c.id DESC');
@@ -28,8 +28,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
    $ev=one('SELECT * FROM users WHERE id=? AND is_active=1',[(int)($_POST['evaluator_id']??0)]);
    $sub=one("SELECT * FROM users WHERE id=? AND role='teacher' AND is_active=1",[(int)($_POST['subject_id']??0)]);
    $cycle=one('SELECT * FROM evaluation_cycles WHERE id=? AND is_open=1',[(int)($_POST['cycle_id']??0)]);
-   if(!$m||!$ev||!$sub||!$cycle||$m['evaluator_role']==='public'||($m['evaluator_role']!=='admin'&&$m['evaluator_role']!==$ev['role'])||($m['slug']==='personal-evaluation' ? $ev['id']!==$sub['id'] : $ev['id']===$sub['id']))throw new Exception('Invalid module, evaluator, teacher or cycle.');
-   if($m['slug']==='personal-evaluation' && $ev['role']!=='teacher')throw new Exception('Only teachers can complete self-evaluation.');
+   if(!$m||!$ev||!$sub||!$cycle||$m['evaluator_role']==='public'||($m['evaluator_role']!=='admin'&&$m['evaluator_role']!==$ev['role'])||(is_self_module($m['slug']) ? $ev['id']!==$sub['id'] : $ev['id']===$sub['id']))throw new Exception('Invalid module, evaluator, teacher or cycle.');
+   if(is_self_module($m['slug']) && $ev['role']!=='teacher')throw new Exception('Only teachers can complete self-evaluation.');
    if($m['slug']==='peer-observation' && ($ev['role']!=='teacher'||$ev['section_id']===null||$sub['section_id']===null||(int)$ev['section_id']!==(int)$sub['section_id']))throw new Exception('Peer observers and observed teachers must belong to the same school section.');
    sql('INSERT INTO assignments(module_id,cycle_id,evaluator_id,subject_id) VALUES (?,?,?,?)',[$m['id'],$cycle['id'],$ev['id'],$sub['id']]);
    audit('assignment_created',(string)db()->lastInsertId());flash('Manual evaluation assignment created.');go('admin/assignments.php');

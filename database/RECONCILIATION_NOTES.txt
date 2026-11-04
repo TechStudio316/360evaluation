@@ -1,0 +1,25 @@
+BGB 360 EVALUATION - RECONCILED AGAINST USER DATABASE DUMP (2026-10-14)
+
+Current database already has module ID 4, slug personal-evaluation, active=1.
+It has five rating options, one section and one indicator.
+Existing Peer Observation and Performance Appraisal assignments/submissions are retained.
+
+CHANGES
+1. Fixed self-assignment and manual assignment logic to recognize personal-evaluation.
+2. Fixed evaluation form self-only access check and reflection labels.
+3. Fixed template loading to use existing module by slug and fill missing sections/indicators.
+4. Seed is idempotent; adds remaining 5 sections and 29 indicators, with rating descriptions.
+5. No DROP TABLE, CREATE DATABASE, deletion or password reset in upgrade SQL.
+
+DEPLOYMENT
+A. Back up database and web folder.
+B. In phpMyAdmin select your existing database and import database/UPGRADE_EXISTING_DB_PERSONAL_EVALUATION.sql.
+C. Upload the updated PHP files (or ZIP contents) to your existing app directory.
+D. Keep your hosting includes/config.php unchanged, but rotate any password previously shared.
+E. In Admin > Evaluation Modules > Personal Evaluation verify 6 sections, 30 criteria.
+F. In Admin > Assignments select an open cycle and assign self-evaluations.
+G. Log in as a teacher and verify the Personal Evaluation form.
+
+Do NOT reimport your original full phpMyAdmin dump onto a live populated database: it includes DROP TABLE statements.
+The existing database uses MyISAM, so transactions are not atomic; make a backup before applying changes.
+No live server/database test was performed.

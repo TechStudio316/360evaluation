@@ -1,0 +1,1 @@
+Go to Admin > Evaluation Modules > Configure: Personal Evaluation and click Load 30 Self-Evaluation Criteria from SQL. The action fills the existing module, not a duplicate. It is repeat-safe and blocked after submitted evaluations. Alternatively import database/self_evaluation_module.sql into the existing selected database. Back up first.

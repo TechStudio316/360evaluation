@@ -1,0 +1,1 @@
+<?php require __DIR__.'/includes/core.php';$_SESSION=[];session_destroy();go('login.php');

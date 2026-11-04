@@ -1,0 +1,1 @@
+<?php require __DIR__.'/includes/core.php';if(!me())go('login.php');go(dashboard_path(me()['role']));
